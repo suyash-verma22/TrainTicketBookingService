@@ -87,35 +87,47 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
-    public boolean removeUser(String email) {
-        List<Ticket> tickets = findTicketByUserEmail(email).getData();
+    public GenericResponse<Ticket> removeUser(Ticket ticket) {
+        Ticket removedTicket = findByTicket(ticket);
         if (!tickets.isEmpty()) {
-            Ticket ticket = tickets.get(0);
-            boolean[] seats = ticket.getSection().equals("A") ? sectionASeats : sectionBSeats;
-            seats[ticket.getSeatNumber() - 1] = false;
-            return tickets.remove(ticket);
+            removedTicket = tickets.get(0);
+            boolean[] seats = removedTicket.getSection().equals("A") ? sectionASeats : sectionBSeats;
+            seats[removedTicket.getSeatNumber() - 1] = false;
+            tickets.remove(removedTicket);
+            return new GenericResponse<Ticket>(Collections.singletonList(removedTicket),"Ticket successfully cancelled",null,HttpStatus.ACCEPTED);
         }
-        return false;
+        return new GenericResponse<Ticket>(null,"No Ticket found for specified user",null,HttpStatus.ACCEPTED);
     }
 
     @Override
-    public boolean modifyUserSeat(String email, String newSection) {
-        List<Ticket> tickets = findTicketByUserEmail(email).getData();
-        if (!tickets.isEmpty()) {
-            Ticket ticket = tickets.get(0);
-            if (ticket != null && !ticket.getSection().equals(newSection)) {
-                int newSeatNumber = assignSeat(newSection);
-                if (newSeatNumber == -1) {
-                    return false;
-                }
-                boolean[] oldSeats = ticket.getSection().equals("A") ? sectionASeats : sectionBSeats;
-                oldSeats[ticket.getSeatNumber() - 1] = false;
+    public GenericResponse<Ticket> modifyUserSeat(Ticket ticket, String newSection, int newSeatNumber) {
+        Ticket ticketFound = findByTicket(ticket);
+        List<String> errors = new ArrayList<>();
+        if(ticketFound == null){
+            return new GenericResponse<Ticket>(Collections.singletonList(ticket),"Ticket not found.",errors,HttpStatus.ACCEPTED);
+        }
+        ticketValidator.validateSeat(newSection,newSeatNumber,errors);
+        if(!errors.isEmpty()){
+            return new GenericResponse<Ticket>(Collections.singletonList(ticket),"Seat modification encountered a error.",errors,HttpStatus.BAD_REQUEST);
+        }
+        boolean[] oldSeats = ticketFound.getSection().equals("A") ? sectionASeats : sectionBSeats;
+        oldSeats[ticketFound.getSeatNumber() - 1] = false;
 
-                ticket.setSection(newSection);
-                ticket.setSeatNumber(newSeatNumber);
-                return true;
+        ticketFound.setSection(newSection);
+        ticketFound.setSeatNumber(newSeatNumber);
+        return new GenericResponse<Ticket>(Collections.singletonList(ticketFound),"Seat modification completed successfully.",errors,HttpStatus.ACCEPTED);
+    }
+
+    private Ticket findByTicket(Ticket ticket){
+        List<Ticket> ticketsOfUser = findTicketByUserEmail(ticket.getUser().getEmail()).getData();
+        if(ticketsOfUser == null){
+            return null;
+        }
+        for(Ticket checkTicket : ticketsOfUser){
+            if(checkTicket.getDate().equals(ticket.getDate()) && checkTicket.getFrom().equalsIgnoreCase(ticket.getFrom()) && checkTicket.getTo().equalsIgnoreCase(ticket.getTo())){
+                return checkTicket;
             }
         }
-        return false;
+        return null;
     }
 }

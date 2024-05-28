@@ -19,6 +19,8 @@ public class TicketValidator {
     public void validateTicket(Ticket ticket, List<Ticket> tickets, List<String> errors){
         String email = ticket.getUser().getEmail();
         LocalDate date = ticket.getDate();
+        String from = ticket.getFrom();
+        String to = ticket.getTo();
 
         // validate all mandatory fields
         checkRequiredFields(ticket,errors);
@@ -30,7 +32,7 @@ public class TicketValidator {
             errors.add("Please enter valid email to book ticket.");
         }
         // check valid date
-        if(!validateTicketDate(email, date, tickets)){
+        if(!validateTicket(email, from, to, date, tickets)){
             errors.add("There is already a ticket booked for the route on this date: " + date);
         }
     }
@@ -58,14 +60,21 @@ public class TicketValidator {
         return matcher.matches();
     }
 
-    private boolean validateTicketDate(String email, LocalDate date, List<Ticket> tickets){
+    private boolean validateTicket(String email, String from, String to, LocalDate date, List<Ticket> tickets){
         Ticket ticket = tickets.stream()
                 .filter(t -> t.getUser().getEmail().equals(email))
                 .findFirst()
                 .orElse(null);
-        if(!ObjectUtils.isEmpty(ticket) && date.equals(ticket.getDate())){
-            return false;
+        return ObjectUtils.isEmpty(ticket) || !date.equals(ticket.getDate())
+                || !from.equalsIgnoreCase(ticket.getFrom()) || !to.equalsIgnoreCase(ticket.getTo());
+    }
+
+    public void validateSeat(String section, int seatNo, List<String> errors){
+        if(!section.equalsIgnoreCase("A") && !section.equalsIgnoreCase("B")){
+            errors.add("Section " + section + " doest not exist on train. Please select a available section.");
         }
-        return true;
+        if(seatNo <= 0 || seatNo > 30){
+            errors.add("Seat number " + seatNo + " doest not exist. Please select a valid seat.");
+        }
     }
 }

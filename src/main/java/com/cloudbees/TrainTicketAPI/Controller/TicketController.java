@@ -30,12 +30,12 @@ public class TicketController {
     }
 
     @DeleteMapping("/remove")
-    public boolean removeUser(@RequestParam String email) {
-        return ticketService.removeUser(email);
+    public GenericResponse<Ticket> removeUser(@RequestBody Ticket ticket) {
+        return ticketService.removeUser(ticket);
     }
 
     @PutMapping("/modify")
-    public boolean modifyUserSeat(@RequestParam String email, @RequestParam String section) {
-        return ticketService.modifyUserSeat(email, section);
+    public GenericResponse<Ticket> modifyUserSeat(@RequestBody Ticket ticket, @RequestParam String section, @RequestParam int seatNo) {
+        return ticketService.modifyUserSeat(ticket,section,seatNo);
     }
 }

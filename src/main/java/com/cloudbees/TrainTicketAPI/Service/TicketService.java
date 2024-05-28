@@ -13,7 +13,7 @@ public interface TicketService {
 
     public GenericResponse<Ticket> getTicketsBySection(String section);
 
-    public boolean removeUser(String email);
+    public GenericResponse<Ticket> removeUser(Ticket ticket);
 
-    public boolean modifyUserSeat(String email, String newSection);
+    public GenericResponse<Ticket> modifyUserSeat(Ticket ticket, String newSection, int seatNo);
 }
