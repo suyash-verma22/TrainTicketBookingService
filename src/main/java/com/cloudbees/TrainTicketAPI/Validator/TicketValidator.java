@@ -37,7 +37,7 @@ public class TicketValidator {
         }
     }
 
-    private void checkRequiredFields(Ticket ticket, List<String> errors){
+    public void checkRequiredFields(Ticket ticket, List<String> errors){
         if(ObjectUtils.isEmpty(ticket.getUser().getEmail())){
             errors.add("Email can not be null/empty.");
         }
@@ -60,7 +60,7 @@ public class TicketValidator {
         return matcher.matches();
     }
 
-    private boolean validateTicket(String email, String from, String to, LocalDate date, List<Ticket> tickets){
+    public boolean validateTicket(String email, String from, String to, LocalDate date, List<Ticket> tickets){
         Ticket ticket = tickets.stream()
                 .filter(t -> t.getUser().getEmail().equals(email))
                 .findFirst()
